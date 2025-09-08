@@ -1,0 +1,521 @@
+{
+  "version": "1.0.0",
+  "description": "QuickBooks MCP Server Tools with proper input schemas and enums",
+  "tools": [
+    {
+      "name": "get_quickbooks_entity_schema",
+      "description": "Fetches the schema for a given QuickBooks entity (e.g., 'Bill', 'Customer'). Use this tool to understand the available fields for an entity before constructing a query with the `query_quickbooks` tool.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "entity_name": {
+            "type": "string",
+            "description": "The name of the QuickBooks entity (e.g., 'Bill', 'Customer', 'Account', 'Vendor', 'Item')",
+            "enum": [
+              "Account",
+              "Bill",
+              "BillPayment",
+              "Budget",
+              "Class",
+              "CompanyInfo",
+              "CreditMemo",
+              "Customer",
+              "Department",
+              "Employee",
+              "Estimate",
+              "Invoice",
+              "Item",
+              "JournalEntry",
+              "Payment",
+              "PaymentMethod",
+              "Preferences",
+              "Purchase",
+              "PurchaseOrder",
+              "SalesReceipt",
+              "TaxAgency",
+              "TaxCode",
+              "TaxRate",
+              "Term",
+              "TimeActivity",
+              "Transfer",
+              "Vendor",
+              "VendorCredit"
+            ]
+          }
+        },
+        "required": [
+          "entity_name"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "object",
+            "description": "The schema definition for the requested entity"
+          },
+          "entity": {
+            "type": "string",
+            "description": "The name of the entity"
+          }
+        }
+      }
+    },
+    {
+      "name": "query_quickbooks",
+      "description": "Executes a SQL-like query on a QuickBooks entity. **IMPORTANT**: Before using this tool, you MUST first use the `get_quickbooks_entity_schema` tool to get the schema for the entity you want to query (e.g., 'Bill', 'Customer'). This will show you the available fields to use in your query's `select` and `where` clauses.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "SQL-like query string for QuickBooks entities. Examples: 'SELECT * FROM Customer', 'SELECT * FROM Item WHERE Active = true', 'SELECT Name, Balance FROM Account WHERE AccountType = \"Bank\"'",
+            "pattern": "^SELECT\\s+.+\\s+FROM\\s+\\w+.*$",
+            "minLength": 10
+          }
+        },
+        "required": [
+          "query"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Query results from QuickBooks"
+      }
+    },
+    {
+      "name": "get_query",
+      "description": "Query QuickBooks entities. If successful, the outcome will be \"Query result containing Account list\". Parameters: query (string): SQL-like query to fetch Account, Bill, BillPayments, Customers etc. (e.g. `select * from Account`, `select * from Bill`, `select * from BillPayment`, `select * from Customer`, `select * from Customer maxresults 2 startposition 1`) [REQUIRED].",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "SQL-like query to fetch Account, Bill, BillPayments, Customers etc. (e.g. `select * from Account`, `select * from Bill`, `select * from BillPayment`, `select * from Customer`, `select * from Customer maxresults 2 startposition 1`)"
+          }
+        },
+        "required": [
+          "query"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Response from QuickBooks API: Query result containing Account list"
+      }
+    },
+    {
+      "name": "get_account_accountId",
+      "description": "Read an Account. If successful, the outcome will be \"The requested Account object\". Parameters: accountId (string): The ID of the account to retrieve [REQUIRED].",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "description": "The ID of the account to retrieve"
+          }
+        },
+        "required": [
+          "accountId"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Response from QuickBooks API: The requested Account object"
+      }
+    },
+    {
+      "name": "get_bill_billId",
+      "description": "Read a Bill. If successful, the outcome will be \"The requested Bill object\". Parameters: billId (string): The ID of the bill to retrieve [REQUIRED].",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "billId": {
+            "type": "string",
+            "description": "The ID of the bill to retrieve"
+          }
+        },
+        "required": [
+          "billId"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Response from QuickBooks API: The requested Bill object"
+      }
+    },
+    {
+      "name": "get_billpayment_billpaymentId",
+      "description": "Read a BillPayment. If successful, the outcome will be \"The requested BillPayment object\". Parameters: billpaymentId (string): The ID of the BillPayment to retrieve [REQUIRED].",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "billpaymentId": {
+            "type": "string",
+            "description": "The ID of the BillPayment to retrieve"
+          }
+        },
+        "required": [
+          "billpaymentId"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Response from QuickBooks API: The requested BillPayment object"
+      }
+    },
+    {
+      "name": "get_customer_customerId",
+      "description": "Read a Customer. If successful, the outcome will be \"The requested Customer object\". Parameters: customerId (string): The ID of the customer to retrieve [REQUIRED].",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string",
+            "description": "The ID of the customer to retrieve"
+          }
+        },
+        "required": [
+          "customerId"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Response from QuickBooks API: The requested Customer object"
+      }
+    },
+    {
+      "name": "get_vendor_vendorId",
+      "description": "Read a Vendor. If successful, the outcome will be \"The requested Vendor object\". Parameters: vendorId (string): The ID of the vendor to retrieve [REQUIRED].",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "vendorId": {
+            "type": "string",
+            "description": "The ID of the vendor to retrieve"
+          }
+        },
+        "required": [
+          "vendorId"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Response from QuickBooks API: The requested Vendor object"
+      }
+    },
+    {
+      "name": "get_taxagency_taxagencyId",
+      "description": "Read a TaxAgency. If successful, the outcome will be \"TaxAgency object\". Parameters: taxagencyId (string): ID of the TaxAgency object [REQUIRED]; minorversion (string): No description provided.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "taxagencyId": {
+            "type": "string",
+            "description": "ID of the TaxAgency object"
+          },
+          "minorversion": {
+            "type": "string",
+            "description": "No description provided"
+          }
+        },
+        "required": [
+          "taxagencyId"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Response from QuickBooks API: TaxAgency object"
+      }
+    },
+    {
+      "name": "get_payment_paymentId",
+      "description": "Read a Payment. If successful, the outcome will be \"Payment object\". Parameters: paymentId (string): No description provided [REQUIRED]; minorversion (string): No description provided.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "paymentId": {
+            "type": "string",
+            "description": "No description provided"
+          },
+          "minorversion": {
+            "type": "string",
+            "description": "No description provided"
+          }
+        },
+        "required": [
+          "paymentId"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Response from QuickBooks API: Payment object"
+      }
+    },
+    {
+      "name": "get_item_itemId",
+      "description": "Read an item (by ID). If successful, the outcome will be \"Item details\". Parameters: itemId (string): No description provided [REQUIRED]; minorversion (string): No description provided.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "No description provided"
+          },
+          "minorversion": {
+            "type": "string",
+            "description": "No description provided"
+          }
+        },
+        "required": [
+          "itemId"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Response from QuickBooks API: Item details"
+      }
+    },
+    {
+      "name": "get_employee_employeeId",
+      "description": "Read Employee. If successful, the outcome will be \"Employee retrieved\". Parameters: employeeId (string): No description provided [REQUIRED]; minorversion (string): No description provided.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "description": "No description provided"
+          },
+          "minorversion": {
+            "type": "string",
+            "description": "No description provided"
+          }
+        },
+        "required": [
+          "employeeId"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Response from QuickBooks API: Employee retrieved"
+      }
+    },
+    {
+      "name": "get_class_classId",
+      "description": "Read a Class. If successful, the outcome will be \"The requested Class object\". Parameters: classId (string): The ID of the Class to retrieve [REQUIRED].",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "classId": {
+            "type": "string",
+            "description": "The ID of the Class to retrieve"
+          }
+        },
+        "required": [
+          "classId"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Response from QuickBooks API: The requested Class object"
+      }
+    },
+    {
+      "name": "get_department_departmentId",
+      "description": "Read a Department. If successful, the outcome will be \"The requested Department object\". Parameters: departmentId (string): The ID of the Department to retrieve [REQUIRED].",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "departmentId": {
+            "type": "string",
+            "description": "The ID of the Department to retrieve"
+          }
+        },
+        "required": [
+          "departmentId"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Response from QuickBooks API: The requested Department object"
+      }
+    },
+    {
+      "name": "get_journalentry_journalEntryId",
+      "description": "Read a JournalEntry. If successful, the outcome will be \"The requested JournalEntry object\". Parameters: journalEntryId (string): The ID of the JournalEntry to retrieve [REQUIRED].",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "journalEntryId": {
+            "type": "string",
+            "description": "The ID of the JournalEntry to retrieve"
+          }
+        },
+        "required": [
+          "journalEntryId"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Response from QuickBooks API: The requested JournalEntry object"
+      }
+    },
+    {
+      "name": "get_estimate_estimateId",
+      "description": "Read an Estimate. If successful, the outcome will be \"The requested Estimate object\". Parameters: estimateId (string): The ID of the Estimate to retrieve [REQUIRED].",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "estimateId": {
+            "type": "string",
+            "description": "The ID of the Estimate to retrieve"
+          }
+        },
+        "required": [
+          "estimateId"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Response from QuickBooks API: The requested Estimate object"
+      }
+    },
+    {
+      "name": "get_preferences",
+      "description": "Read Preferences. If successful, the outcome will be \"The company's Preferences object\".",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Response from QuickBooks API: The company's Preferences object"
+      }
+    },
+    {
+      "name": "get_reports_ProfitAndLoss",
+      "description": "Read a ProfitAndLoss report. If successful, the outcome will be \"The Profit and Loss report\". Parameters: start_date (string): The start date of the report, in the format YYYY-MM-DD.; end_date (string): The end date of the report, in the format YYYY-MM-DD.; accounting_method (string): The accounting method used in the report. Allowed values: ['Accrual', 'Cash']; customer (string): Filters report contents to include information for specified customers. One or more comma separated customer IDs.; qzurl (string): Specifies whether Quick Zoom URL information should be generated for rows in the report. Allowed values: ['true', 'false']; date_macro (string): Predefined date range. Allowed values: ['Today', 'Yesterday', 'This Week', 'Last Week', 'This Week-to-date', 'Last Week-to-date', 'Next Week', 'Next 4 Weeks', 'This Month', 'Last Month', 'This Month-to-date', 'Last Month-to-date', 'Next Month', 'This Fiscal Quarter', 'Last Fiscal Quarter', 'This Fiscal Quarter-to-date', 'Last Fiscal Quarter-to-date', 'Next Fiscal Quarter', 'This Fiscal Year', 'Last Fiscal Year', 'This Fiscal Year-to-date', 'Last Fiscal Year-to-date', 'Next Fiscal Year']; adjusted_gain_loss (string): Specifies whether unrealized gain and losses are included in the report. Allowed values: ['true', 'false']; class (string): Filters report contents to include information for specified classes. One or more comma separated class IDs.; item (string): Filters report contents to include information for specified items. One or more comma separated item IDs.; sort_order (string): The sort order. Allowed values: ['ascend', 'descend']; summarize_column_by (string): The criteria by which to group the report results. Allowed values: ['Total', 'Month', 'Week', 'Days', 'Quarter', 'Year', 'Customers', 'Vendors', 'Classes', 'Departments', 'Employees', 'ProductsAndServices']; department (string): Filters report contents to include information for specified departments. One or more comma separated department IDs.; vendor (string): Filters report contents to include information for specified vendors. One or more comma separated vendor IDs.; minorversion (string): The minor version of the API..",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "start_date": {
+            "type": "string",
+            "description": "The start date of the report, in the format YYYY-MM-DD.",
+            "format": "date"
+          },
+          "end_date": {
+            "type": "string",
+            "description": "The end date of the report, in the format YYYY-MM-DD.",
+            "format": "date"
+          },
+          "accounting_method": {
+            "type": "string",
+            "description": "The accounting method used in the report.",
+            "enum": [
+              "Accrual",
+              "Cash"
+            ]
+          },
+          "customer": {
+            "type": "string",
+            "description": "Filters report contents to include information for specified customers. One or more comma separated customer IDs."
+          },
+          "qzurl": {
+            "type": "string",
+            "description": "Specifies whether Quick Zoom URL information should be generated for rows in the report.",
+            "enum": [
+              "true",
+              "false"
+            ]
+          },
+          "date_macro": {
+            "type": "string",
+            "description": "Predefined date range.",
+            "enum": [
+              "Today",
+              "Yesterday",
+              "This Week",
+              "Last Week",
+              "This Week-to-date",
+              "Last Week-to-date",
+              "Next Week",
+              "Next 4 Weeks",
+              "This Month",
+              "Last Month",
+              "This Month-to-date",
+              "Last Month-to-date",
+              "Next Month",
+              "This Fiscal Quarter",
+              "Last Fiscal Quarter",
+              "This Fiscal Quarter-to-date",
+              "Last Fiscal Quarter-to-date",
+              "Next Fiscal Quarter",
+              "This Fiscal Year",
+              "Last Fiscal Year",
+              "This Fiscal Year-to-date",
+              "Last Fiscal Year-to-date",
+              "Next Fiscal Year"
+            ]
+          },
+          "adjusted_gain_loss": {
+            "type": "string",
+            "description": "Specifies whether unrealized gain and losses are included in the report.",
+            "enum": [
+              "true",
+              "false"
+            ]
+          },
+          "class": {
+            "type": "string",
+            "description": "Filters report contents to include information for specified classes. One or more comma separated class IDs."
+          },
+          "item": {
+            "type": "string",
+            "description": "Filters report contents to include information for specified items. One or more comma separated item IDs."
+          },
+          "sort_order": {
+            "type": "string",
+            "description": "The sort order.",
+            "enum": [
+              "ascend",
+              "descend"
+            ]
+          },
+          "summarize_column_by": {
+            "type": "string",
+            "description": "The criteria by which to group the report results.",
+            "enum": [
+              "Total",
+              "Month",
+              "Week",
+              "Days",
+              "Quarter",
+              "Year",
+              "Customers",
+              "Vendors",
+              "Classes",
+              "Departments",
+              "Employees",
+              "ProductsAndServices"
+            ]
+          },
+          "department": {
+            "type": "string",
+            "description": "Filters report contents to include information for specified departments. One or more comma separated department IDs."
+          },
+          "vendor": {
+            "type": "string",
+            "description": "Filters report contents to include information for specified vendors. One or more comma separated vendor IDs."
+          },
+          "minorversion": {
+            "type": "string",
+            "description": "The minor version of the API."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Response from QuickBooks API: The Profit and Loss report"
+      }
+    }
+  ]
+}

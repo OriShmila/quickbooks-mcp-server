@@ -83,17 +83,37 @@ def load_apis():
             parameters_data = []
             for param in request_params:
                 param_schema = param.get("schema", {})
-                parameters_data.append(
-                    {
-                        "name": param.get("name", "Unnamed"),
-                        "location": param.get("in", "unknown"),  # "query" or "path"
-                        "required": param.get("required", False),
-                        "type": param_schema.get("type", "unknown"),
-                        "description": param.get(
-                            "description", "No description provided"
-                        ),
-                    }
-                )
+                param_info = {
+                    "name": param.get("name", "Unnamed"),
+                    "location": param.get("in", "unknown"),  # "query" or "path"
+                    "required": param.get("required", False),
+                    "type": param_schema.get("type", "unknown"),
+                    "description": param.get("description", "No description provided"),
+                }
+
+                # Add enum values if present
+                if "enum" in param_schema:
+                    param_info["enum"] = param_schema["enum"]
+
+                # Add format if present (e.g., "date")
+                if "format" in param_schema:
+                    param_info["format"] = param_schema["format"]
+
+                # Add pattern if present
+                if "pattern" in param_schema:
+                    param_info["pattern"] = param_schema["pattern"]
+
+                # Add additional constraints
+                if "minimum" in param_schema:
+                    param_info["minimum"] = param_schema["minimum"]
+                if "maximum" in param_schema:
+                    param_info["maximum"] = param_schema["maximum"]
+                if "minLength" in param_schema:
+                    param_info["minLength"] = param_schema["minLength"]
+                if "maxLength" in param_schema:
+                    param_info["maxLength"] = param_schema["maxLength"]
+
+                parameters_data.append(param_info)
 
             method_data.append(
                 {
