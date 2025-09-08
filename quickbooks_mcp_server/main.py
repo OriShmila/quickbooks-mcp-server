@@ -1,7 +1,7 @@
 from mcp import types
 from mcp.server.fastmcp import FastMCP
-from quickbooks_interaction import QuickBooksSession
-from api_importer import load_apis
+from .quickbooks_interaction import QuickBooksSession
+from .api_importer import load_apis
 import sys
 import json
 from pathlib import Path
@@ -17,28 +17,38 @@ except Exception as e:
 
 mcp = FastMCP("quickbooks")
 
+
 @mcp.tool()
 def get_quickbooks_entity_schema(entity_name: str) -> types.TextContent:
     """
     Fetches the schema for a given QuickBooks entity (e.g., 'Bill', 'Customer').
     Use this tool to understand the available fields for an entity before constructing a query with the `query_quickbooks` tool.
     """
-    schema_path = Path(__file__).parent / 'quickbooks_entity_schemas.json'
+    schema_path = Path(__file__).parent / "quickbooks_entity_schemas.json"
     try:
-        with open(schema_path, 'r') as f:
+        with open(schema_path, "r") as f:
             all_schemas = json.load(f)
-        
+
         entity_schema = all_schemas.get(entity_name)
-        
+
         if entity_schema:
-            return types.TextContent(type='text', text=json.dumps(entity_schema, indent=2))
+            return types.TextContent(
+                type="text", text=json.dumps(entity_schema, indent=2)
+            )
         else:
             available_entities = list(all_schemas.keys())
-            return types.TextContent(type='text', text=f"Error: Schema not found for entity '{entity_name}'. Available entities: {available_entities}")
+            return types.TextContent(
+                type="text",
+                text=f"Error: Schema not found for entity '{entity_name}'. Available entities: {available_entities}",
+            )
     except FileNotFoundError:
-        return types.TextContent(type='text', text="Error: The schema definition file `quickbooks_entity_schemas.json` was not found.")
+        return types.TextContent(
+            type="text",
+            text="Error: The schema definition file `quickbooks_entity_schemas.json` was not found.",
+        )
     except Exception as e:
-        return types.TextContent(type='text', text=f"An error occurred: {e}")
+        return types.TextContent(type="text", text=f"An error occurred: {e}")
+
 
 @mcp.tool()
 def query_quickbooks(query: str) -> types.TextContent:
@@ -47,13 +57,17 @@ def query_quickbooks(query: str) -> types.TextContent:
     **IMPORTANT**: Before using this tool, you MUST first use the `get_quickbooks_entity_schema` tool to get the schema for the entity you want to query (e.g., 'Bill', 'Customer'). This will show you the available fields to use in your query's `select` and `where` clauses.
     """
     if quickbooks is None:
-        return types.TextContent(type='text', text="Error: QuickBooks session not initialized. Please check your credentials and restart the server.")
-    
+        return types.TextContent(
+            type="text",
+            text="Error: QuickBooks session not initialized. Please check your credentials and restart the server.",
+        )
+
     try:
         response = quickbooks.query(query)
-        return types.TextContent(type='text', text=str(response))
+        return types.TextContent(type="text", text=str(response))
     except Exception as e:
-        return types.TextContent(type='text', text=f"Error executing query: {e}")
+        return types.TextContent(type="text", text=f"Error executing query: {e}")
+
 
 def register_all_apis():
     apis = load_apis()
@@ -61,44 +75,53 @@ def register_all_apis():
         response_description = api["response_description"]
 
         # Clean up the route and remove the company/realm part
-        original_route = api['route']
-        if '/v3/company/{realmId}' in original_route:
-            clean_api_route = original_route.replace('/v3/company/{realmId}', '')
+        original_route = api["route"]
+        if "/v3/company/{realmId}" in original_route:
+            clean_api_route = original_route.replace("/v3/company/{realmId}", "")
         else:
             clean_api_route = original_route
 
-        clean_route_for_name = (clean_api_route.replace('/', '_').replace('-', '_').replace(':', '_')
-                               .replace('{', '').replace('}', ''))
+        clean_route_for_name = (
+            clean_api_route.replace("/", "_")
+            .replace("-", "_")
+            .replace(":", "_")
+            .replace("{", "")
+            .replace("}", "")
+        )
 
-        method_name = f'{api["method"]}{clean_route_for_name}'
+        method_name = f"{api['method']}{clean_route_for_name}"
         clean_summary = api["summary"]
         if clean_summary is None:
-            words = method_name.split('_')
+            words = method_name.split("_")
             words[0] = words[0].capitalize()
-            clean_summary = ' '.join(words) + '. '
+            clean_summary = " ".join(words) + ". "
 
-        doc = clean_summary + '. '
+        doc = clean_summary + ". "
         if response_description != "OK":
-            doc += f'If successful, the outcome will be \"{api["response_description"]}\". '
-        
+            doc += (
+                f'If successful, the outcome will be "{api["response_description"]}". '
+            )
+
         # Combine request_data and parameters for the docstring
         all_params = {}
-        api_params_filtered = [p for p in api.get('parameters', []) if p['name'] != 'realmId']
+        api_params_filtered = [
+            p for p in api.get("parameters", []) if p["name"] != "realmId"
+        ]
 
         if api_params_filtered:
             for p in api_params_filtered:
-                all_params[p['name']] = {
-                    'description': p.get('description', 'No description provided'),
-                    'required': p.get('required', False),
-                    'type': p.get('type', 'unknown'),
-                    'in': p.get('location')
+                all_params[p["name"]] = {
+                    "description": p.get("description", "No description provided"),
+                    "required": p.get("required", False),
+                    "type": p.get("type", "unknown"),
+                    "in": p.get("location"),
                 }
-        
-        if api.get('request_data'):
-            doc += f'The request body should be a JSON object with the following structure: {json.dumps(api["request_data"])}. '
+
+        if api.get("request_data"):
+            doc += f"The request body should be a JSON object with the following structure: {json.dumps(api['request_data'])}. "
 
         if all_params:
-            doc += f'Parameters: {json.dumps(all_params, indent=2)}. '
+            doc += f"Parameters: {json.dumps(all_params, indent=2)}. "
 
         # Create a more structured tool function definition
         method_str = f"""
@@ -124,7 +147,7 @@ def {method_name}(**kwargs) -> types.TextContent:
     
     try:
         route = \"{clean_api_route}\"
-        api_method = \"{api['method']}\"
+        api_method = \"{api["method"]}\"
         
         path_params = {{}}
         query_params = {{}}
@@ -169,8 +192,14 @@ def {method_name}(**kwargs) -> types.TextContent:
 """
         exec(method_str, globals(), locals())
 
+
 register_all_apis()
 
+
+def main():
+    """Main entry point for the QuickBooks MCP server."""
+    mcp.run(transport="stdio")
+
+
 if __name__ == "__main__":
-    print("Starting MCP server...")
-    mcp.run(transport='stdio') 
+    main()
