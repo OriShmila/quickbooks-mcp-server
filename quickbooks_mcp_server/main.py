@@ -1,4 +1,3 @@
-from mcp import types
 from mcp.server.fastmcp import FastMCP
 from .quickbooks_interaction import QuickBooksSession
 from .api_importer import load_apis
@@ -12,14 +11,14 @@ try:
     quickbooks = QuickBooksSession()
     print("✓ QuickBooks session initialized successfully", file=sys.stderr)
 except Exception as e:
-    print(f"✗ Failed to initialize QuickBooks session: {e}", file=sys.stderr)
-    print("Please check your .env file and QuickBooks credentials", file=sys.stderr)
+    # Defer reporting to tool invocation time
+    pass
 
 mcp = FastMCP("quickbooks")
 
 
 @mcp.tool()
-def get_quickbooks_entity_schema(entity_name: str) -> types.TextContent:
+def get_quickbooks_entity_schema(entity_name: str):
     """
     Fetches the schema for a given QuickBooks entity (e.g., 'Bill', 'Customer').
     Use this tool to understand the available fields for an entity before constructing a query with the `query_quickbooks` tool.
@@ -29,41 +28,38 @@ def get_quickbooks_entity_schema(entity_name: str) -> types.TextContent:
         entity_schema = all_schemas.get(entity_name)
 
         if entity_schema:
-            return types.TextContent(
-                type="text", text=json.dumps(entity_schema, indent=2)
-            )
+            return entity_schema
         else:
             available_entities = list(all_schemas.keys())
-            return types.TextContent(
-                type="text",
-                text=f"Error: Schema not found for entity '{entity_name}'. Available entities: {available_entities}",
+            raise KeyError(
+                f"Schema not found for entity '{entity_name}'. Available entities: {available_entities}"
             )
     except FileNotFoundError:
-        return types.TextContent(
-            type="text",
-            text="Error: The schema definition file `quickbooks_entity_schemas.json` was not found.",
+        raise FileNotFoundError(
+            "The schema definition file `quickbooks_entity_schemas.json` was not found."
         )
     except Exception as e:
-        return types.TextContent(type="text", text=f"An error occurred: {e}")
+        raise RuntimeError(f"An error occurred: {e}")
 
 
 @mcp.tool()
-def query_quickbooks(query: str) -> types.TextContent:
+def query_quickbooks(query: str):
     """
     Executes a SQL-like query on a QuickBooks entity.
     **IMPORTANT**: Before using this tool, you MUST first use the `get_quickbooks_entity_schema` tool to get the schema for the entity you want to query (e.g., 'Bill', 'Customer'). This will show you the available fields to use in your query's `select` and `where` clauses.
     """
     if quickbooks is None:
-        return types.TextContent(
-            type="text",
-            text="Error: QuickBooks session not initialized. Please check your credentials and restart the server.",
+        raise RuntimeError(
+            "QuickBooks session not initialized. Please check your credentials and restart the server."
         )
 
-    try:
-        response = quickbooks.query(query)
-        return types.TextContent(type="text", text=str(response))
-    except Exception as e:
-        return types.TextContent(type="text", text=f"Error executing query: {e}")
+    response = quickbooks.query(query)
+    if isinstance(response, dict):
+        return response
+    elif isinstance(response, list):
+        raise TypeError("Expected dict response but got list")
+    else:
+        raise TypeError(f"Expected dict response but got {type(response).__name__}")
 
 
 def register_all_apis():
@@ -121,14 +117,14 @@ def register_all_apis():
             doc += f"Parameters: {json.dumps(all_params, indent=2)}. "
 
         # Create a more structured tool function definition
-        method_str = f"""
+        method_str = f'''
 @mcp.tool()
-def {method_name}(**kwargs) -> types.TextContent:
-    \"\"\"{doc}\"\"\"
+def {method_name}(**kwargs):
+    """{doc}"""
     
     # Check if QuickBooks is initialized
     if quickbooks is None:
-        return types.TextContent(type='text', text="Error: QuickBooks session not initialized. Please check your credentials and restart the server.")
+        raise RuntimeError("Error: QuickBooks session not initialized. Please check your credentials and restart the server.")
     
     # Workaround for clients that pass all arguments as a single string in 'kwargs'
     if 'kwargs' in kwargs and isinstance(kwargs['kwargs'], str) and '=' in kwargs['kwargs']:
@@ -140,11 +136,9 @@ def {method_name}(**kwargs) -> types.TextContent:
             # If parsing fails, do nothing and proceed with the original kwargs
             pass
 
-    print(f"Executing '{method_name}' with arguments: {{kwargs}}", file=sys.stderr)
-    
     try:
-        route = \"{clean_api_route}\"
-        api_method = \"{api["method"]}\"
+        route = "{clean_api_route}"
+        api_method = "{api["method"]}"
         
         path_params = {{}}
         query_params = {{}}
@@ -171,7 +165,7 @@ def {method_name}(**kwargs) -> types.TextContent:
             try:
                 route = route.format(**path_params)
             except KeyError as e:
-                return types.TextContent(type='text', text=f"Error: Missing required path parameter {{e}} for route {{route}}")
+                raise KeyError(f"Error: Missing required path parameter {{e}} for route {{route}}")
 
         response = quickbooks.call_route(
             method_type=api_method,
@@ -180,13 +174,15 @@ def {method_name}(**kwargs) -> types.TextContent:
             body=request_body if request_body else None
         )
         
-        print(f"Response from '{method_name}': {{response}}", file=sys.stderr)
-        return types.TextContent(type='text', text=str(response))
+        if isinstance(response, dict):
+            return response
+        elif isinstance(response, list):
+            raise TypeError("Expected dict response but got list")
+        else:
+            raise TypeError(f"Expected dict response but got {{type(response).__name__}}")
     except Exception as e:
-        error_msg = f"Error executing {method_name}: {{e}}"
-        print(error_msg, file=sys.stderr)
-        return types.TextContent(type='text', text=error_msg)
-"""
+        raise RuntimeError(f"Error executing {method_name}: {{e}}")
+'''
         exec(method_str, globals(), locals())
 
 
