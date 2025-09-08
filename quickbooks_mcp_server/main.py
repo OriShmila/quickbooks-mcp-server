@@ -4,7 +4,7 @@ from .quickbooks_interaction import QuickBooksSession
 from .api_importer import load_apis
 import sys
 import json
-from pathlib import Path
+from .api_importer import package_path
 
 # Initialize QuickBooks session with error handling
 quickbooks = None
@@ -24,7 +24,7 @@ def get_quickbooks_entity_schema(entity_name: str) -> types.TextContent:
     Fetches the schema for a given QuickBooks entity (e.g., 'Bill', 'Customer').
     Use this tool to understand the available fields for an entity before constructing a query with the `query_quickbooks` tool.
     """
-    schema_path = Path(__file__).parent / "quickbooks_entity_schemas.json"
+    schema_path = package_path("quickbooks_entity_schemas.json")
     try:
         with open(schema_path, "r") as f:
             all_schemas = json.load(f)

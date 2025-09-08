@@ -1,14 +1,17 @@
 import sys
 import json
-from importlib.resources import files
+import os
+
+
+def package_path(filename: str) -> str:
+    base_dir = os.path.dirname(__file__)
+    return os.path.join(base_dir, filename)
 
 
 def load_apis():
     """Load QuickBooks API documentation from the packaged schema file."""
     try:
-        schema_path = files("quickbooks_mcp_server").joinpath(
-            "quickbooks_openapi_schema.json"
-        )
+        schema_path = package_path("quickbooks_openapi_schema.json")
         with schema_path.open("r", encoding="utf-8") as f:
             loaded = json.load(f)
     except Exception as e:
