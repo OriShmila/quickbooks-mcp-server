@@ -19,6 +19,12 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["quickbooks_mcp_server"]
+include = [
+  "quickbooks_mcp_server/*.json"
+]
 
-[tool.hatch.build.targets.wheel.shared-data]
-"quickbooks_openapi_schema.json" = "quickbooks_mcp_server/quickbooks_openapi_schema.json" 
+[tool.hatch.build.targets.sdist]
+include = [
+  "quickbooks_mcp_server/*.json",
+  "README.md"
+]
