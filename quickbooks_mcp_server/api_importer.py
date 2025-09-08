@@ -18,8 +18,7 @@ def load_json_file(filename: str) -> dict:
     for path in candidates:
         try:
             with open(path, "r") as f:
-                schema_data = json.load(f)
-            return {tool["name"]: tool for tool in schema_data["tools"]}
+                return json.load(f)
         except FileNotFoundError:
             continue
         except json.JSONDecodeError as e:
