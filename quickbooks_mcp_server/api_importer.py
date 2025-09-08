@@ -8,12 +8,31 @@ def package_path(filename: str) -> str:
     return os.path.join(base_dir, filename)
 
 
+def load_json_file(filename: str) -> dict:
+    """Load JSON file bundled in the package."""
+    # Prefer package copy; fall back to CWD for local dev
+    candidates = [
+        package_path(filename),
+        os.path.join(os.getcwd(), filename),
+    ]
+    for path in candidates:
+        try:
+            with open(path, "r") as f:
+                schema_data = json.load(f)
+            return {tool["name"]: tool for tool in schema_data["tools"]}
+        except FileNotFoundError:
+            continue
+        except json.JSONDecodeError as e:
+            print(f"Error parsing {filename} at {path}: {e}")
+            return {}
+    print(f"{filename} file not found in package or working directory")
+    return {}
+
+
 def load_apis():
     """Load QuickBooks API documentation from the packaged schema file."""
     try:
-        schema_path = package_path("quickbooks_openapi_schema.json")
-        with schema_path.open("r", encoding="utf-8") as f:
-            loaded = json.load(f)
+        loaded = load_json_file("quickbooks_openapi_schema.json")
     except Exception as e:
         message = f"Error loading API documentation: {e}"
         print(message, file=sys.stderr)
