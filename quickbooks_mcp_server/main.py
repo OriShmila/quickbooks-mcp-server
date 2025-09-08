@@ -1,24 +1,78 @@
-from mcp.server.fastmcp import FastMCP
-from .quickbooks_interaction import QuickBooksSession
-from .api_importer import load_apis
-import sys
 import json
-from .api_importer import load_json_file
+import sys
+from typing import Dict, List, Any, TypedDict, Optional
+
+from mcp.server.fastmcp import FastMCP
+
+from .quickbooks_interaction import QuickBooksSession
+from .api_importer import load_apis, load_json_file
 
 # Initialize QuickBooks session with error handling
 quickbooks = None
 try:
     quickbooks = QuickBooksSession()
     print("✓ QuickBooks session initialized successfully", file=sys.stderr)
-except Exception as e:
+except Exception:
     # Defer reporting to tool invocation time
     pass
 
+# Create the MCP server
 mcp = FastMCP("quickbooks")
 
 
+# Define structured response types
+class QuickBooksEntity(TypedDict, total=False):
+    """Base QuickBooks entity structure."""
+
+    Id: str
+    Name: str
+    Active: bool
+    SyncToken: str
+    MetaData: Dict[str, Any]
+
+
+class QuickBooksAccount(QuickBooksEntity, total=False):
+    """QuickBooks Account entity structure."""
+
+    SubAccount: bool
+    FullyQualifiedName: str
+    Classification: str
+    AccountType: str
+    AccountSubType: str
+    CurrentBalance: float
+    CurrentBalanceWithSubAccounts: float
+    CurrencyRef: Dict[str, str]
+    domain: str
+    sparse: bool
+
+
+class QueryResponse(TypedDict, total=False):
+    """QuickBooks Query Response structure."""
+
+    Account: List[QuickBooksAccount]
+    Bill: List[Dict[str, Any]]
+    Customer: List[Dict[str, Any]]
+    Vendor: List[Dict[str, Any]]
+    Item: List[Dict[str, Any]]
+    startPosition: int
+    maxResults: int
+
+
+class QuickBooksQueryResult(TypedDict):
+    """Complete QuickBooks query result structure."""
+
+    QueryResponse: QueryResponse
+    time: str
+
+
+class EntitySchema(TypedDict):
+    """QuickBooks entity schema structure."""
+
+    properties: Dict[str, Dict[str, Any]]
+
+
 @mcp.tool()
-def get_quickbooks_entity_schema(entity_name: str):
+def get_quickbooks_entity_schema(entity_name: str) -> Dict[str, Any]:
     """
     Fetches the schema for a given QuickBooks entity (e.g., 'Bill', 'Customer').
     Use this tool to understand the available fields for an entity before constructing a query with the `query_quickbooks` tool.
@@ -28,6 +82,7 @@ def get_quickbooks_entity_schema(entity_name: str):
         entity_schema = all_schemas.get(entity_name)
 
         if entity_schema:
+            # Return the raw schema - FastMCP should handle this as structured content
             return entity_schema
         else:
             available_entities = list(all_schemas.keys())
@@ -43,7 +98,7 @@ def get_quickbooks_entity_schema(entity_name: str):
 
 
 @mcp.tool()
-def query_quickbooks(query: str):
+def query_quickbooks(query: str) -> Dict[str, Any]:
     """
     Executes a SQL-like query on a QuickBooks entity.
     **IMPORTANT**: Before using this tool, you MUST first use the `get_quickbooks_entity_schema` tool to get the schema for the entity you want to query (e.g., 'Bill', 'Customer'). This will show you the available fields to use in your query's `select` and `where` clauses.
@@ -55,9 +110,11 @@ def query_quickbooks(query: str):
 
     response = quickbooks.query(query)
     if isinstance(response, dict):
+        # Return the raw response - FastMCP should handle this as structured content
         return response
     elif isinstance(response, list):
-        raise TypeError("Expected dict response but got list")
+        # Handle list responses by wrapping in a results structure
+        return {"results": response}
     else:
         raise TypeError(f"Expected dict response but got {type(response).__name__}")
 
@@ -116,10 +173,10 @@ def register_all_apis():
         if all_params:
             doc += f"Parameters: {json.dumps(all_params, indent=2)}. "
 
-        # Create a more structured tool function definition
+        # Create a more structured tool function definition with proper return type
         method_str = f'''
 @mcp.tool()
-def {method_name}(**kwargs):
+def {method_name}(**kwargs) -> Dict[str, Any]:
     """{doc}"""
     
     # Check if QuickBooks is initialized
@@ -174,10 +231,11 @@ def {method_name}(**kwargs):
             body=request_body if request_body else None
         )
         
+        # Return the actual Python object - FastMCP will handle structured content
         if isinstance(response, dict):
             return response
         elif isinstance(response, list):
-            raise TypeError("Expected dict response but got list")
+           return {{"results": response}}
         else:
             raise TypeError(f"Expected dict response but got {{type(response).__name__}}")
     except Exception as e:
