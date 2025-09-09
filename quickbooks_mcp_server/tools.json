@@ -1,16 +1,15 @@
 {
   "version": "1.0.0",
-  "description": "QuickBooks MCP Server Tools with proper input schemas and enums",
+  "description": "QuickBooks MCP Server Tools",
   "tools": [
     {
       "name": "get_entity_schema",
-      "description": "Get the schema definition for any QuickBooks entity to understand what fields are available for querying. Use this before running queries to see valid field names.",
+      "description": "Fetch the field schema for a QuickBooks entity. Use before queries to see valid fields.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "entity_name": {
             "type": "string",
-            "description": "The name of the QuickBooks entity (e.g., 'Bill', 'Customer', 'Account', 'Vendor', 'Item')",
             "enum": [
               "Account",
               "Bill",
@@ -48,363 +47,87 @@
       "outputSchema": {
         "type": "object",
         "properties": {
-          "schema": {
-            "type": "object",
-            "description": "The schema definition for the requested entity"
-          },
-          "entity": {
-            "type": "string",
-            "description": "The name of the entity"
-          }
-        }
+          "entity": { "type": "string" },
+          "schema": { "type": "object" }
+        },
+        "required": ["entity", "schema"]
       }
     },
     {
       "name": "query_quickbooks",
-      "description": "Execute SQL-like queries on QuickBooks data. Use SELECT statements to fetch records with optional WHERE clauses for filtering. Get entity schemas first to see available fields.",
+      "description": "Run a read-only SQL-like query. Example: SELECT Name, Balance FROM Account WHERE AccountType = 'Bank'.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "query": {
             "type": "string",
-            "description": "SQL-like query string for QuickBooks entities. Examples: 'SELECT * FROM Customer', 'SELECT * FROM Item WHERE Active = true', 'SELECT Name, Balance FROM Account WHERE AccountType = \"Bank\"'",
-            "pattern": "^SELECT\\s+.+\\s+FROM\\s+\\w+.*$",
+            "pattern": "^\\s*SELECT\\s+.+\\s+FROM\\s+\\w+.*$",
             "minLength": 10
-          }
+          },
+          "page_token": { "type": "string" }
         },
         "required": ["query"]
       },
       "outputSchema": {
         "type": "object",
-        "description": "Query results from QuickBooks"
-      }
-    },
-    {
-      "name": "get_account",
-      "description": "Retrieve a specific QuickBooks account by its ID. Returns complete account details including balance, type, and classification.",
-      "inputSchema": {
-        "type": "object",
         "properties": {
-          "account_id": {
-            "type": "string",
-            "description": "The ID of the account to retrieve"
-          }
+          "result": { "type": "array", "items": { "type": "object" } },
+          "next_page_token": { "type": "string" }
         },
-        "required": ["account_id"]
-      },
-      "outputSchema": {
-        "type": "object",
-        "description": "Response from QuickBooks API: The requested Account object"
+        "required": ["result"]
       }
     },
     {
-      "name": "get_bill",
-      "description": "Retrieve a specific bill by its ID. Returns full bill details including vendor information, line items, amounts, and payment status.",
+      "name": "get_report",
+      "description": "Run a QuickBooks report and return tidy normalized rows (always long format). Supports P&L, Balance Sheet, Cash Flow, General Ledger, Trial Balance.",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "bill_id": {
+          "report_name": {
             "type": "string",
-            "description": "The ID of the bill to retrieve"
-          }
-        },
-        "required": ["bill_id"]
-      },
-      "outputSchema": {
-        "type": "object",
-        "description": "Response from QuickBooks API: The requested Bill object"
-      }
-    },
-    {
-      "name": "get_billpayment",
-      "description": "Retrieve a specific bill payment by its ID. Returns payment details including amount, payment method, and associated bills.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "billpayment_id": {
-            "type": "string",
-            "description": "The ID of the BillPayment to retrieve"
-          }
-        },
-        "required": ["billpayment_id"]
-      },
-      "outputSchema": {
-        "type": "object",
-        "description": "Response from QuickBooks API: The requested BillPayment object"
-      }
-    },
-    {
-      "name": "get_customer",
-      "description": "Retrieve a specific customer by their ID. Returns complete customer information including contact details, billing address, and account balance.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "customer_id": {
-            "type": "string",
-            "description": "The ID of the customer to retrieve"
-          }
-        },
-        "required": ["customer_id"]
-      },
-      "outputSchema": {
-        "type": "object",
-        "description": "Response from QuickBooks API: The requested Customer object"
-      }
-    },
-    {
-      "name": "get_vendor",
-      "description": "Retrieve a specific vendor by their ID. Returns vendor details including contact information, payment terms, and account balance.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "vendor_id": {
-            "type": "string",
-            "description": "The ID of the vendor to retrieve"
-          }
-        },
-        "required": ["vendor_id"]
-      },
-      "outputSchema": {
-        "type": "object",
-        "description": "Response from QuickBooks API: The requested Vendor object"
-      }
-    },
-    {
-      "name": "get_taxagency",
-      "description": "Retrieve a specific tax agency by its ID. Returns tax agency details used for tax reporting and remittance.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "taxagency_id": {
-            "type": "string",
-            "description": "ID of the TaxAgency object"
-          }
-        },
-        "required": ["taxagency_id"]
-      },
-      "outputSchema": {
-        "type": "object",
-        "description": "Response from QuickBooks API: TaxAgency object"
-      }
-    },
-    {
-      "name": "get_payment",
-      "description": "Retrieve a specific payment by its ID. Returns payment details including amount, customer, and payment method.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "payment_id": {
-            "type": "string",
-            "description": "The unique ID of the payment to retrieve"
-          }
-        },
-        "required": ["payment_id"]
-      },
-      "outputSchema": {
-        "type": "object",
-        "description": "Response from QuickBooks API: Payment object"
-      }
-    },
-    {
-      "name": "get_item",
-      "description": "Retrieve a specific item/product by its ID. Returns item details including pricing, description, and inventory information.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "item_id": {
-            "type": "string",
-            "description": "The unique ID of the item to retrieve"
-          }
-        },
-        "required": ["item_id"]
-      },
-      "outputSchema": {
-        "type": "object",
-        "description": "Response from QuickBooks API: Item details"
-      }
-    },
-    {
-      "name": "get_employee",
-      "description": "Retrieve a specific employee by their ID. Returns employee information including personal details and employment status.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "employee_id": {
-            "type": "string",
-            "description": "The unique ID of the employee to retrieve"
-          }
-        },
-        "required": ["employee_id"]
-      },
-      "outputSchema": {
-        "type": "object",
-        "description": "Response from QuickBooks API: Employee retrieved"
-      }
-    },
-    {
-      "name": "get_class",
-      "description": "Retrieve a specific class by its ID. Classes are used for categorizing transactions and generating reports by segment.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "class_id": {
-            "type": "string",
-            "description": "The ID of the Class to retrieve"
-          }
-        },
-        "required": ["class_id"]
-      },
-      "outputSchema": {
-        "type": "object",
-        "description": "Response from QuickBooks API: The requested Class object"
-      }
-    },
-    {
-      "name": "get_department",
-      "description": "Retrieve a specific department by its ID. Departments help organize business operations and track performance by division.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "department_id": {
-            "type": "string",
-            "description": "The ID of the Department to retrieve"
-          }
-        },
-        "required": ["department_id"]
-      },
-      "outputSchema": {
-        "type": "object",
-        "description": "Response from QuickBooks API: The requested Department object"
-      }
-    },
-    {
-      "name": "get_journalentry",
-      "description": "Retrieve a specific journal entry by its ID. Returns the complete journal entry with all debit and credit line items.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "journal_entry_id": {
-            "type": "string",
-            "description": "The ID of the JournalEntry to retrieve"
-          }
-        },
-        "required": ["journal_entry_id"]
-      },
-      "outputSchema": {
-        "type": "object",
-        "description": "Response from QuickBooks API: The requested JournalEntry object"
-      }
-    },
-    {
-      "name": "get_estimate",
-      "description": "Retrieve a specific estimate/quote by its ID. Returns estimate details including customer, line items, and totals.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "estimate_id": {
-            "type": "string",
-            "description": "The ID of the Estimate to retrieve"
-          }
-        },
-        "required": ["estimate_id"]
-      },
-      "outputSchema": {
-        "type": "object",
-        "description": "Response from QuickBooks API: The requested Estimate object"
-      }
-    },
-    {
-      "name": "get_preferences",
-      "description": "Retrieve the company's preferences and settings. Returns configuration options for various QuickBooks features and defaults.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {}
-      },
-      "outputSchema": {
-        "type": "object",
-        "description": "Response from QuickBooks API: The company's Preferences object"
-      }
-    },
-    {
-      "name": "get_reports_profit_and_loss",
-      "description": "Generate a Profit and Loss report showing revenue, expenses, and net income. Specify date range using either start/end dates or predefined date macros. Filter by customers, vendors, classes, or departments as needed.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "start_date": {
-            "type": "string",
-            "description": "The start date of the report, in the format YYYY-MM-DD.",
-            "format": "date"
-          },
-          "end_date": {
-            "type": "string",
-            "description": "The end date of the report, in the format YYYY-MM-DD.",
-            "format": "date"
+            "enum": [
+              "ProfitAndLoss",
+              "BalanceSheet",
+              "CashFlow",
+              "GeneralLedger",
+              "TrialBalance"
+            ]
           },
           "accounting_method": {
             "type": "string",
-            "description": "The accounting method used in the report.",
-            "enum": ["Accrual", "Cash"]
-          },
-          "customer": {
-            "type": "string",
-            "description": "Filters report contents to include information for specified customers. One or more comma separated customer IDs."
-          },
-          "qzurl": {
-            "type": "string",
-            "description": "Specifies whether Quick Zoom URL information should be generated for rows in the report.",
-            "enum": ["true", "false"]
+            "enum": ["Accrual", "Cash"],
+            "default": "Accrual"
           },
           "date_macro": {
             "type": "string",
-            "description": "Predefined date range.",
             "enum": [
               "Today",
               "Yesterday",
               "This Week",
               "Previous Week",
-              "Previous Week-to-date",
-              "Previous Week-to-date",
               "Next Week",
               "Next 4 Weeks",
               "This Month",
               "Previous Month",
+              "Next Month",
               "This Month-to-date",
               "Previous Month-to-date",
-              "Next Month",
               "This Fiscal Quarter",
               "Previous Fiscal Quarter",
+              "Next Fiscal Quarter",
               "This Fiscal Quarter-to-date",
               "Previous Fiscal Quarter-to-date",
-              "Next Fiscal Quarter",
               "This Fiscal Year",
               "Previous Fiscal Year",
+              "Next Fiscal Year",
               "This Fiscal Year-to-date",
-              "Previous Fiscal Year-to-date",
-              "Next Fiscal Year"
+              "Previous Fiscal Year-to-date"
             ]
           },
-          "adjusted_gain_loss": {
+          "start_date": { "type": "string", "format": "date" },
+          "end_date": { "type": "string", "format": "date" },
+          "group_by": {
             "type": "string",
-            "description": "Specifies whether unrealized gain and losses are included in the report.",
-            "enum": ["true", "false"]
-          },
-          "class": {
-            "type": "string",
-            "description": "Filters report contents to include information for specified classes. One or more comma separated class IDs."
-          },
-          "item": {
-            "type": "string",
-            "description": "Filters report contents to include information for specified items. One or more comma separated item IDs."
-          },
-          "sort_order": {
-            "type": "string",
-            "description": "The sort order.",
-            "enum": ["ascend", "descend"]
-          },
-          "summarize_column_by": {
-            "type": "string",
-            "description": "The criteria by which to group the report results.",
             "enum": [
               "Total",
               "Month",
@@ -418,21 +141,70 @@
               "Departments",
               "Employees",
               "ProductsAndServices"
+            ],
+            "description": "How to bucket the report periods."
+          },
+          "filters": {
+            "type": "object",
+            "description": "Comma-separated IDs for common filters.",
+            "properties": {
+              "customer": { "type": "string" },
+              "vendor": { "type": "string" },
+              "class": { "type": "string" },
+              "department": { "type": "string" },
+              "item": { "type": "string" },
+              "account": { "type": "string" }
+            },
+            "additionalProperties": false
+          },
+          "page_token": { "type": "string" }
+        },
+        "allOf": [
+          {
+            "description": "Require either date_macro or both start_date and end_date.",
+            "anyOf": [
+              { "required": ["date_macro"] },
+              { "required": ["start_date", "end_date"] }
             ]
-          },
-          "department": {
-            "type": "string",
-            "description": "Filters report contents to include information for specified departments. One or more comma separated department IDs."
-          },
-          "vendor": {
-            "type": "string",
-            "description": "Filters report contents to include information for specified vendors. One or more comma separated vendor IDs."
           }
-        }
+        ],
+        "required": ["report_name"]
       },
       "outputSchema": {
         "type": "object",
-        "description": "Response from QuickBooks API: The Profit and Loss report"
+        "properties": {
+          "result": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "Each row = one line-period pair. Example: { line, period, amount, ... }"
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "report_name": { "type": "string" },
+              "currency": { "type": "string" },
+              "period": {
+                "type": "object",
+                "properties": {
+                  "start_date": { "type": "string" },
+                  "end_date": { "type": "string" },
+                  "date_macro": { "type": "string" }
+                }
+              },
+              "group_by": { "type": "string" },
+              "columns": { "type": "array", "items": { "type": "string" } },
+              "source": {
+                "type": "object",
+                "properties": { "qb_realm_id": { "type": "string" } }
+              }
+            },
+            "required": ["report_name", "period", "columns"]
+          },
+          "next_page_token": { "type": "string" }
+        },
+        "required": ["result", "meta"]
       }
     }
   ]

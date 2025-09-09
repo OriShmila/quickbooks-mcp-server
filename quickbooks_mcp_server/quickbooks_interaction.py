@@ -92,9 +92,22 @@ class QuickBooksSession:
             message = f"Error: {response.status_code} {response.text}"
             raise RuntimeError(message)
 
-    def query(self, query: str):
-        """Execute a QuickBooks query."""
-        return self.call_route("get", "/query", params={"query": query})
+    def query(
+        self,
+        query: str,
+        start_position: int | None = None,
+        max_results: int | None = None,
+    ):
+        """Execute a QuickBooks query with optional pagination.
+        start_position corresponds to QuickBooks 'startposition' param.
+        max_results corresponds to QuickBooks 'maxresults' param.
+        """
+        params = {"query": query}
+        if start_position is not None:
+            params["startposition"] = start_position
+        if max_results is not None:
+            params["maxresults"] = max_results
+        return self.call_route("get", "/query", params=params)
 
     def get_account(self, account_id: str):
         """Get a specific account by ID."""

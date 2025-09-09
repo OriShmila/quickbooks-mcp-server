@@ -1,0 +1,146 @@
+{
+  "test_cases": [
+    {
+      "name": "get_entity_schema_customer",
+      "tool": "get_entity_schema",
+      "arguments": { "entity_name": "Customer" },
+      "description": "Get schema definition for Customer entity",
+      "expected_fields": ["schema", "entity"],
+      "should_succeed": true
+    },
+    {
+      "name": "get_entity_schema_account",
+      "tool": "get_entity_schema",
+      "arguments": { "entity_name": "Account" },
+      "description": "Get schema definition for Account entity",
+      "expected_fields": ["schema", "entity"],
+      "should_succeed": true
+    },
+
+    {
+      "name": "query_quickbooks_all_customers",
+      "tool": "query_quickbooks",
+      "arguments": { "query": "SELECT * FROM Customer" },
+      "description": "Query all customers",
+      "expected_fields": ["result"],
+      "should_succeed": true
+    },
+    {
+      "name": "query_quickbooks_bank_accounts",
+      "tool": "query_quickbooks",
+      "arguments": {
+        "query": "SELECT Name, CurrentBalance FROM Account WHERE AccountType = 'Bank'"
+      },
+      "description": "Query bank accounts only",
+      "expected_fields": ["result"],
+      "should_succeed": true
+    },
+    {
+      "name": "query_quickbooks_invalid_syntax",
+      "tool": "query_quickbooks",
+      "arguments": { "query": "INVALID SQL QUERY" },
+      "description": "Test with invalid SQL syntax",
+      "expected_fields": [],
+      "should_succeed": false
+    },
+
+    {
+      "name": "query_quickbooks_pagination_page_1",
+      "tool": "query_quickbooks",
+      "arguments": {
+        "query": "SELECT Id, DisplayName FROM Customer",
+        "page_size": 2
+      },
+      "description": "Pagination: first page should return next_page_token",
+      "expected_fields": ["result"],
+      "should_succeed": true
+    },
+    {
+      "name": "query_quickbooks_pagination_page_2",
+      "tool": "query_quickbooks",
+      "arguments": {
+        "query": "SELECT Id, DisplayName FROM Customer",
+        "page_token": "3",
+        "page_size": 2
+      },
+      "description": "Pagination: second page using returned token",
+      "expected_fields": ["result"],
+      "should_succeed": true
+    },
+    {
+      "name": "query_quickbooks_too_short",
+      "tool": "query_quickbooks",
+      "arguments": { "query": "SELECT *" },
+      "description": "Test with query too short (violates minLength)",
+      "expected_fields": [],
+      "should_succeed": false
+    },
+    {
+      "name": "query_quickbooks_no_select",
+      "tool": "query_quickbooks",
+      "arguments": { "query": "UPDATE Customer SET Name = 'Test'" },
+      "description": "Test with non-SELECT query (violates pattern)",
+      "expected_fields": [],
+      "should_succeed": false
+    },
+
+    {
+      "name": "get_report_profit_and_loss_current_month",
+      "tool": "get_report",
+      "arguments": {
+        "report_name": "ProfitAndLoss",
+        "date_macro": "This Month",
+        "accounting_method": "Accrual"
+      },
+      "description": "Get profit and loss report for current month",
+      "expected_fields": ["result", "meta"],
+      "should_succeed": true
+    },
+    {
+      "name": "get_report_profit_and_loss_previous_quarter_group_month",
+      "tool": "get_report",
+      "arguments": {
+        "report_name": "ProfitAndLoss",
+        "date_macro": "Previous Fiscal Quarter",
+        "group_by": "Month"
+      },
+      "description": "Get P&L report for previous quarter summarized by month",
+      "expected_fields": ["result", "meta"],
+      "should_succeed": true
+    },
+    {
+      "name": "get_report_invalid_method",
+      "tool": "get_report",
+      "arguments": {
+        "report_name": "ProfitAndLoss",
+        "accounting_method": "InvalidMethod"
+      },
+      "description": "Test with invalid accounting method",
+      "expected_fields": [],
+      "should_succeed": false
+    },
+    {
+      "name": "get_report_invalid_date_macro",
+      "tool": "get_report",
+      "arguments": {
+        "report_name": "ProfitAndLoss",
+        "date_macro": "Invalid Date Range"
+      },
+      "description": "Test with invalid date macro",
+      "expected_fields": [],
+      "should_succeed": false
+    },
+    {
+      "name": "get_report_invalid_date_range",
+      "tool": "get_report",
+      "arguments": {
+        "report_name": "ProfitAndLoss",
+        "start_date": "invalid-date-format",
+        "end_date": "2024-12-31"
+      },
+      "description": "Test with completely invalid date format",
+      "expected_fields": [],
+      "should_succeed": false
+    }
+  ]
+}
