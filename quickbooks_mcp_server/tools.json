@@ -3,8 +3,8 @@
   "description": "QuickBooks MCP Server Tools with proper input schemas and enums",
   "tools": [
     {
-      "name": "get_quickbooks_entity_schema",
-      "description": "Fetches the schema for a given QuickBooks entity (e.g., 'Bill', 'Customer'). Use this tool to understand the available fields for an entity before constructing a query with the `query_quickbooks` tool.",
+      "name": "get_entity_schema",
+      "description": "Get the schema definition for any QuickBooks entity to understand what fields are available for querying. Use this before running queries to see valid field names.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -43,9 +43,7 @@
             ]
           }
         },
-        "required": [
-          "entity_name"
-        ]
+        "required": ["entity_name"]
       },
       "outputSchema": {
         "type": "object",
@@ -63,7 +61,7 @@
     },
     {
       "name": "query_quickbooks",
-      "description": "Executes a SQL-like query on a QuickBooks entity. **IMPORTANT**: Before using this tool, you MUST first use the `get_quickbooks_entity_schema` tool to get the schema for the entity you want to query (e.g., 'Bill', 'Customer'). This will show you the available fields to use in your query's `select` and `where` clauses.",
+      "description": "Execute SQL-like queries on QuickBooks data. Use SELECT statements to fetch records with optional WHERE clauses for filtering. Get entity schemas first to see available fields.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -74,9 +72,7 @@
             "minLength": 10
           }
         },
-        "required": [
-          "query"
-        ]
+        "required": ["query"]
       },
       "outputSchema": {
         "type": "object",
@@ -84,39 +80,17 @@
       }
     },
     {
-      "name": "get_query",
-      "description": "Query QuickBooks entities. If successful, the outcome will be \"Query result containing Account list\". Parameters: query (string): SQL-like query to fetch Account, Bill, BillPayments, Customers etc. (e.g. `select * from Account`, `select * from Bill`, `select * from BillPayment`, `select * from Customer`, `select * from Customer maxresults 2 startposition 1`) [REQUIRED].",
+      "name": "get_account",
+      "description": "Retrieve a specific QuickBooks account by its ID. Returns complete account details including balance, type, and classification.",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "query": {
-            "type": "string",
-            "description": "SQL-like query to fetch Account, Bill, BillPayments, Customers etc. (e.g. `select * from Account`, `select * from Bill`, `select * from BillPayment`, `select * from Customer`, `select * from Customer maxresults 2 startposition 1`)"
-          }
-        },
-        "required": [
-          "query"
-        ]
-      },
-      "outputSchema": {
-        "type": "object",
-        "description": "Response from QuickBooks API: Query result containing Account list"
-      }
-    },
-    {
-      "name": "get_account_accountId",
-      "description": "Read an Account. If successful, the outcome will be \"The requested Account object\". Parameters: accountId (string): The ID of the account to retrieve [REQUIRED].",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "accountId": {
+          "account_id": {
             "type": "string",
             "description": "The ID of the account to retrieve"
           }
         },
-        "required": [
-          "accountId"
-        ]
+        "required": ["account_id"]
       },
       "outputSchema": {
         "type": "object",
@@ -124,19 +98,17 @@
       }
     },
     {
-      "name": "get_bill_billId",
-      "description": "Read a Bill. If successful, the outcome will be \"The requested Bill object\". Parameters: billId (string): The ID of the bill to retrieve [REQUIRED].",
+      "name": "get_bill",
+      "description": "Retrieve a specific bill by its ID. Returns full bill details including vendor information, line items, amounts, and payment status.",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "billId": {
+          "bill_id": {
             "type": "string",
             "description": "The ID of the bill to retrieve"
           }
         },
-        "required": [
-          "billId"
-        ]
+        "required": ["bill_id"]
       },
       "outputSchema": {
         "type": "object",
@@ -144,19 +116,17 @@
       }
     },
     {
-      "name": "get_billpayment_billpaymentId",
-      "description": "Read a BillPayment. If successful, the outcome will be \"The requested BillPayment object\". Parameters: billpaymentId (string): The ID of the BillPayment to retrieve [REQUIRED].",
+      "name": "get_billpayment",
+      "description": "Retrieve a specific bill payment by its ID. Returns payment details including amount, payment method, and associated bills.",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "billpaymentId": {
+          "billpayment_id": {
             "type": "string",
             "description": "The ID of the BillPayment to retrieve"
           }
         },
-        "required": [
-          "billpaymentId"
-        ]
+        "required": ["billpayment_id"]
       },
       "outputSchema": {
         "type": "object",
@@ -164,19 +134,17 @@
       }
     },
     {
-      "name": "get_customer_customerId",
-      "description": "Read a Customer. If successful, the outcome will be \"The requested Customer object\". Parameters: customerId (string): The ID of the customer to retrieve [REQUIRED].",
+      "name": "get_customer",
+      "description": "Retrieve a specific customer by their ID. Returns complete customer information including contact details, billing address, and account balance.",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "customerId": {
+          "customer_id": {
             "type": "string",
             "description": "The ID of the customer to retrieve"
           }
         },
-        "required": [
-          "customerId"
-        ]
+        "required": ["customer_id"]
       },
       "outputSchema": {
         "type": "object",
@@ -184,19 +152,17 @@
       }
     },
     {
-      "name": "get_vendor_vendorId",
-      "description": "Read a Vendor. If successful, the outcome will be \"The requested Vendor object\". Parameters: vendorId (string): The ID of the vendor to retrieve [REQUIRED].",
+      "name": "get_vendor",
+      "description": "Retrieve a specific vendor by their ID. Returns vendor details including contact information, payment terms, and account balance.",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "vendorId": {
+          "vendor_id": {
             "type": "string",
             "description": "The ID of the vendor to retrieve"
           }
         },
-        "required": [
-          "vendorId"
-        ]
+        "required": ["vendor_id"]
       },
       "outputSchema": {
         "type": "object",
@@ -204,23 +170,17 @@
       }
     },
     {
-      "name": "get_taxagency_taxagencyId",
-      "description": "Read a TaxAgency. If successful, the outcome will be \"TaxAgency object\". Parameters: taxagencyId (string): ID of the TaxAgency object [REQUIRED]; minorversion (string): No description provided.",
+      "name": "get_taxagency",
+      "description": "Retrieve a specific tax agency by its ID. Returns tax agency details used for tax reporting and remittance.",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "taxagencyId": {
+          "taxagency_id": {
             "type": "string",
             "description": "ID of the TaxAgency object"
-          },
-          "minorversion": {
-            "type": "string",
-            "description": "No description provided"
           }
         },
-        "required": [
-          "taxagencyId"
-        ]
+        "required": ["taxagency_id"]
       },
       "outputSchema": {
         "type": "object",
@@ -228,23 +188,17 @@
       }
     },
     {
-      "name": "get_payment_paymentId",
-      "description": "Read a Payment. If successful, the outcome will be \"Payment object\". Parameters: paymentId (string): No description provided [REQUIRED]; minorversion (string): No description provided.",
+      "name": "get_payment",
+      "description": "Retrieve a specific payment by its ID. Returns payment details including amount, customer, and payment method.",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "paymentId": {
+          "payment_id": {
             "type": "string",
-            "description": "No description provided"
-          },
-          "minorversion": {
-            "type": "string",
-            "description": "No description provided"
+            "description": "The unique ID of the payment to retrieve"
           }
         },
-        "required": [
-          "paymentId"
-        ]
+        "required": ["payment_id"]
       },
       "outputSchema": {
         "type": "object",
@@ -252,23 +206,17 @@
       }
     },
     {
-      "name": "get_item_itemId",
-      "description": "Read an item (by ID). If successful, the outcome will be \"Item details\". Parameters: itemId (string): No description provided [REQUIRED]; minorversion (string): No description provided.",
+      "name": "get_item",
+      "description": "Retrieve a specific item/product by its ID. Returns item details including pricing, description, and inventory information.",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "itemId": {
+          "item_id": {
             "type": "string",
-            "description": "No description provided"
-          },
-          "minorversion": {
-            "type": "string",
-            "description": "No description provided"
+            "description": "The unique ID of the item to retrieve"
           }
         },
-        "required": [
-          "itemId"
-        ]
+        "required": ["item_id"]
       },
       "outputSchema": {
         "type": "object",
@@ -276,23 +224,17 @@
       }
     },
     {
-      "name": "get_employee_employeeId",
-      "description": "Read Employee. If successful, the outcome will be \"Employee retrieved\". Parameters: employeeId (string): No description provided [REQUIRED]; minorversion (string): No description provided.",
+      "name": "get_employee",
+      "description": "Retrieve a specific employee by their ID. Returns employee information including personal details and employment status.",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "employeeId": {
+          "employee_id": {
             "type": "string",
-            "description": "No description provided"
-          },
-          "minorversion": {
-            "type": "string",
-            "description": "No description provided"
+            "description": "The unique ID of the employee to retrieve"
           }
         },
-        "required": [
-          "employeeId"
-        ]
+        "required": ["employee_id"]
       },
       "outputSchema": {
         "type": "object",
@@ -300,19 +242,17 @@
       }
     },
     {
-      "name": "get_class_classId",
-      "description": "Read a Class. If successful, the outcome will be \"The requested Class object\". Parameters: classId (string): The ID of the Class to retrieve [REQUIRED].",
+      "name": "get_class",
+      "description": "Retrieve a specific class by its ID. Classes are used for categorizing transactions and generating reports by segment.",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "classId": {
+          "class_id": {
             "type": "string",
             "description": "The ID of the Class to retrieve"
           }
         },
-        "required": [
-          "classId"
-        ]
+        "required": ["class_id"]
       },
       "outputSchema": {
         "type": "object",
@@ -320,19 +260,17 @@
       }
     },
     {
-      "name": "get_department_departmentId",
-      "description": "Read a Department. If successful, the outcome will be \"The requested Department object\". Parameters: departmentId (string): The ID of the Department to retrieve [REQUIRED].",
+      "name": "get_department",
+      "description": "Retrieve a specific department by its ID. Departments help organize business operations and track performance by division.",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "departmentId": {
+          "department_id": {
             "type": "string",
             "description": "The ID of the Department to retrieve"
           }
         },
-        "required": [
-          "departmentId"
-        ]
+        "required": ["department_id"]
       },
       "outputSchema": {
         "type": "object",
@@ -340,19 +278,17 @@
       }
     },
     {
-      "name": "get_journalentry_journalEntryId",
-      "description": "Read a JournalEntry. If successful, the outcome will be \"The requested JournalEntry object\". Parameters: journalEntryId (string): The ID of the JournalEntry to retrieve [REQUIRED].",
+      "name": "get_journalentry",
+      "description": "Retrieve a specific journal entry by its ID. Returns the complete journal entry with all debit and credit line items.",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "journalEntryId": {
+          "journal_entry_id": {
             "type": "string",
             "description": "The ID of the JournalEntry to retrieve"
           }
         },
-        "required": [
-          "journalEntryId"
-        ]
+        "required": ["journal_entry_id"]
       },
       "outputSchema": {
         "type": "object",
@@ -360,19 +296,17 @@
       }
     },
     {
-      "name": "get_estimate_estimateId",
-      "description": "Read an Estimate. If successful, the outcome will be \"The requested Estimate object\". Parameters: estimateId (string): The ID of the Estimate to retrieve [REQUIRED].",
+      "name": "get_estimate",
+      "description": "Retrieve a specific estimate/quote by its ID. Returns estimate details including customer, line items, and totals.",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "estimateId": {
+          "estimate_id": {
             "type": "string",
             "description": "The ID of the Estimate to retrieve"
           }
         },
-        "required": [
-          "estimateId"
-        ]
+        "required": ["estimate_id"]
       },
       "outputSchema": {
         "type": "object",
@@ -381,7 +315,7 @@
     },
     {
       "name": "get_preferences",
-      "description": "Read Preferences. If successful, the outcome will be \"The company's Preferences object\".",
+      "description": "Retrieve the company's preferences and settings. Returns configuration options for various QuickBooks features and defaults.",
       "inputSchema": {
         "type": "object",
         "properties": {}
@@ -392,8 +326,8 @@
       }
     },
     {
-      "name": "get_reports_ProfitAndLoss",
-      "description": "Read a ProfitAndLoss report. If successful, the outcome will be \"The Profit and Loss report\". Parameters: start_date (string): The start date of the report, in the format YYYY-MM-DD.; end_date (string): The end date of the report, in the format YYYY-MM-DD.; accounting_method (string): The accounting method used in the report. Allowed values: ['Accrual', 'Cash']; customer (string): Filters report contents to include information for specified customers. One or more comma separated customer IDs.; qzurl (string): Specifies whether Quick Zoom URL information should be generated for rows in the report. Allowed values: ['true', 'false']; date_macro (string): Predefined date range. Allowed values: ['Today', 'Yesterday', 'This Week', 'Last Week', 'This Week-to-date', 'Last Week-to-date', 'Next Week', 'Next 4 Weeks', 'This Month', 'Last Month', 'This Month-to-date', 'Last Month-to-date', 'Next Month', 'This Fiscal Quarter', 'Last Fiscal Quarter', 'This Fiscal Quarter-to-date', 'Last Fiscal Quarter-to-date', 'Next Fiscal Quarter', 'This Fiscal Year', 'Last Fiscal Year', 'This Fiscal Year-to-date', 'Last Fiscal Year-to-date', 'Next Fiscal Year']; adjusted_gain_loss (string): Specifies whether unrealized gain and losses are included in the report. Allowed values: ['true', 'false']; class (string): Filters report contents to include information for specified classes. One or more comma separated class IDs.; item (string): Filters report contents to include information for specified items. One or more comma separated item IDs.; sort_order (string): The sort order. Allowed values: ['ascend', 'descend']; summarize_column_by (string): The criteria by which to group the report results. Allowed values: ['Total', 'Month', 'Week', 'Days', 'Quarter', 'Year', 'Customers', 'Vendors', 'Classes', 'Departments', 'Employees', 'ProductsAndServices']; department (string): Filters report contents to include information for specified departments. One or more comma separated department IDs.; vendor (string): Filters report contents to include information for specified vendors. One or more comma separated vendor IDs.; minorversion (string): The minor version of the API..",
+      "name": "get_reports_profit_and_loss",
+      "description": "Generate a Profit and Loss report showing revenue, expenses, and net income. Specify date range using either start/end dates or predefined date macros. Filter by customers, vendors, classes, or departments as needed.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -410,10 +344,7 @@
           "accounting_method": {
             "type": "string",
             "description": "The accounting method used in the report.",
-            "enum": [
-              "Accrual",
-              "Cash"
-            ]
+            "enum": ["Accrual", "Cash"]
           },
           "customer": {
             "type": "string",
@@ -422,10 +353,7 @@
           "qzurl": {
             "type": "string",
             "description": "Specifies whether Quick Zoom URL information should be generated for rows in the report.",
-            "enum": [
-              "true",
-              "false"
-            ]
+            "enum": ["true", "false"]
           },
           "date_macro": {
             "type": "string",
@@ -434,35 +362,32 @@
               "Today",
               "Yesterday",
               "This Week",
-              "Last Week",
-              "This Week-to-date",
-              "Last Week-to-date",
+              "Previous Week",
+              "Previous Week-to-date",
+              "Previous Week-to-date",
               "Next Week",
               "Next 4 Weeks",
               "This Month",
-              "Last Month",
+              "Previous Month",
               "This Month-to-date",
-              "Last Month-to-date",
+              "Previous Month-to-date",
               "Next Month",
               "This Fiscal Quarter",
-              "Last Fiscal Quarter",
+              "Previous Fiscal Quarter",
               "This Fiscal Quarter-to-date",
-              "Last Fiscal Quarter-to-date",
+              "Previous Fiscal Quarter-to-date",
               "Next Fiscal Quarter",
               "This Fiscal Year",
-              "Last Fiscal Year",
+              "Previous Fiscal Year",
               "This Fiscal Year-to-date",
-              "Last Fiscal Year-to-date",
+              "Previous Fiscal Year-to-date",
               "Next Fiscal Year"
             ]
           },
           "adjusted_gain_loss": {
             "type": "string",
             "description": "Specifies whether unrealized gain and losses are included in the report.",
-            "enum": [
-              "true",
-              "false"
-            ]
+            "enum": ["true", "false"]
           },
           "class": {
             "type": "string",
@@ -475,10 +400,7 @@
           "sort_order": {
             "type": "string",
             "description": "The sort order.",
-            "enum": [
-              "ascend",
-              "descend"
-            ]
+            "enum": ["ascend", "descend"]
           },
           "summarize_column_by": {
             "type": "string",
@@ -505,10 +427,6 @@
           "vendor": {
             "type": "string",
             "description": "Filters report contents to include information for specified vendors. One or more comma separated vendor IDs."
-          },
-          "minorversion": {
-            "type": "string",
-            "description": "The minor version of the API."
           }
         }
       },

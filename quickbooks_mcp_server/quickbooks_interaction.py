@@ -1,17 +1,20 @@
 import requests
 from requests.auth import HTTPBasicAuth
-from .environment import Environment
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class QuickBooksSession:
     def __init__(self):
         # Get credentials from environment variables
-        self.client_id = Environment.get("QUICKBOOKS_CLIENT_ID")
-        self.client_secret = Environment.get("QUICKBOOKS_CLIENT_SECRET")
-        self.refresh_token = Environment.get("QUICKBOOKS_REFRESH_TOKEN")
-        self.company_id = Environment.get("QUICKBOOKS_COMPANY_ID")
+        self.client_id = os.getenv("QUICKBOOKS_CLIENT_ID")
+        self.client_secret = os.getenv("QUICKBOOKS_CLIENT_SECRET")
+        self.refresh_token = os.getenv("QUICKBOOKS_REFRESH_TOKEN")
+        self.company_id = os.getenv("QUICKBOOKS_COMPANY_ID")
         # Set base URL based on environment
-        env = Environment.get("QUICKBOOKS_ENV", "sandbox").lower()
+        env = os.getenv("QUICKBOOKS_ENV", "sandbox").lower()
         base_urls = {
             "production": "https://quickbooks.api.intuit.com",
             "sandbox": "https://sandbox-quickbooks.api.intuit.com",

@@ -3,14 +3,32 @@ Tool handlers for the QuickBooks MCP server.
 Contains all the tool function implementations.
 """
 
-import json
 import logging
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any
 
 from .quickbooks_interaction import QuickBooksSession
 from .api_importer import load_json_file
 
 logger = logging.getLogger(__name__)
+
+
+# Mapping from user-friendly "Previous" terminology to QuickBooks API "Last" terminology
+PREVIOUS_TO_LAST_MAPPING = {
+    "Previous Week": "Last Week",
+    "Previous Week-to-date": "Last Week-to-date",
+    "Previous Month": "Last Month",
+    "Previous Month-to-date": "Last Month-to-date",
+    "Previous Fiscal Quarter": "Last Fiscal Quarter",
+    "Previous Fiscal Quarter-to-date": "Last Fiscal Quarter-to-date",
+    "Previous Fiscal Year": "Last Fiscal Year",
+    "Previous Fiscal Year-to-date": "Last Fiscal Year-to-date",
+}
+
+
+def convert_previous_to_last(value: str) -> str:
+    """Convert 'Previous' terminology to 'Last' for QuickBooks API compatibility."""
+    return PREVIOUS_TO_LAST_MAPPING.get(value, value)
+
 
 # Initialize QuickBooks session with error handling
 quickbooks = None
@@ -64,130 +82,173 @@ async def query_quickbooks(query: str) -> Dict[str, Any]:
         raise TypeError(f"Expected dict response but got {type(response).__name__}")
 
 
-# Dynamic tool function generator
-def create_api_tool_function(api_info: Dict[str, Any]):
-    """Create a tool function for a specific QuickBooks API endpoint."""
+# Hardcoded API tool functions
+async def get_account(account_id: str) -> Dict[str, Any]:
+    """Retrieve a specific QuickBooks account by its ID."""
+    if quickbooks is None:
+        raise RuntimeError("QuickBooks session not initialized.")
 
-    async def api_tool_function(**kwargs) -> Dict[str, Any]:
-        # Check if QuickBooks is initialized
-        if quickbooks is None:
-            raise RuntimeError(
-                "Error: QuickBooks session not initialized. Please check your credentials and restart the server."
-            )
+    response = quickbooks.call_route("get", f"/account/{account_id}")
+    return response if isinstance(response, dict) else {"results": response}
 
-        try:
-            # Clean up the route and remove the company/realm part
-            original_route = api_info["route"]
-            if "/v3/company/{realmId}" in original_route:
-                clean_api_route = original_route.replace("/v3/company/{realmId}", "")
+
+async def get_bill(bill_id: str) -> Dict[str, Any]:
+    """Retrieve a specific bill by its ID."""
+    if quickbooks is None:
+        raise RuntimeError("QuickBooks session not initialized.")
+
+    response = quickbooks.call_route("get", f"/bill/{bill_id}")
+    return response if isinstance(response, dict) else {"results": response}
+
+
+async def get_billpayment(billpayment_id: str) -> Dict[str, Any]:
+    """Retrieve a specific bill payment by its ID."""
+    if quickbooks is None:
+        raise RuntimeError("QuickBooks session not initialized.")
+
+    response = quickbooks.call_route("get", f"/billpayment/{billpayment_id}")
+    return response if isinstance(response, dict) else {"results": response}
+
+
+async def get_customer(customer_id: str) -> Dict[str, Any]:
+    """Retrieve a specific customer by their ID."""
+    if quickbooks is None:
+        raise RuntimeError("QuickBooks session not initialized.")
+
+    response = quickbooks.call_route("get", f"/customer/{customer_id}")
+    return response if isinstance(response, dict) else {"results": response}
+
+
+async def get_vendor(vendor_id: str) -> Dict[str, Any]:
+    """Retrieve a specific vendor by their ID."""
+    if quickbooks is None:
+        raise RuntimeError("QuickBooks session not initialized.")
+
+    response = quickbooks.call_route("get", f"/vendor/{vendor_id}")
+    return response if isinstance(response, dict) else {"results": response}
+
+
+async def get_taxagency(taxagency_id: str, minorversion: str = None) -> Dict[str, Any]:
+    """Retrieve a specific tax agency by its ID."""
+    if quickbooks is None:
+        raise RuntimeError("QuickBooks session not initialized.")
+
+    params = {"minorversion": minorversion} if minorversion else {}
+    response = quickbooks.call_route("get", f"/taxagency/{taxagency_id}", params=params)
+    return response if isinstance(response, dict) else {"results": response}
+
+
+async def get_payment(payment_id: str) -> Dict[str, Any]:
+    """Retrieve a specific payment by its ID."""
+    if quickbooks is None:
+        raise RuntimeError("QuickBooks session not initialized.")
+
+    response = quickbooks.call_route("get", f"/payment/{payment_id}")
+    return response if isinstance(response, dict) else {"results": response}
+
+
+async def get_item(item_id: str, minorversion: str = None) -> Dict[str, Any]:
+    """Retrieve a specific item/product by its ID."""
+    if quickbooks is None:
+        raise RuntimeError("QuickBooks session not initialized.")
+
+    params = {"minorversion": minorversion} if minorversion else {}
+    response = quickbooks.call_route("get", f"/item/{item_id}", params=params)
+    return response if isinstance(response, dict) else {"results": response}
+
+
+async def get_employee(employee_id: str, minorversion: str = None) -> Dict[str, Any]:
+    """Retrieve a specific employee by their ID."""
+    if quickbooks is None:
+        raise RuntimeError("QuickBooks session not initialized.")
+
+    params = {"minorversion": minorversion} if minorversion else {}
+    response = quickbooks.call_route("get", f"/employee/{employee_id}", params=params)
+    return response if isinstance(response, dict) else {"results": response}
+
+
+async def get_class(class_id: str) -> Dict[str, Any]:
+    """Retrieve a specific class by its ID."""
+    if quickbooks is None:
+        raise RuntimeError("QuickBooks session not initialized.")
+
+    response = quickbooks.call_route("get", f"/class/{class_id}")
+    return response if isinstance(response, dict) else {"results": response}
+
+
+async def get_department(department_id: str) -> Dict[str, Any]:
+    """Retrieve a specific department by its ID."""
+    if quickbooks is None:
+        raise RuntimeError("QuickBooks session not initialized.")
+
+    response = quickbooks.call_route("get", f"/department/{department_id}")
+    return response if isinstance(response, dict) else {"results": response}
+
+
+async def get_journalentry(journal_entry_id: str) -> Dict[str, Any]:
+    """Retrieve a specific journal entry by its ID."""
+    if quickbooks is None:
+        raise RuntimeError("QuickBooks session not initialized.")
+
+    response = quickbooks.call_route("get", f"/journalentry/{journal_entry_id}")
+    return response if isinstance(response, dict) else {"results": response}
+
+
+async def get_estimate(estimate_id: str) -> Dict[str, Any]:
+    """Retrieve a specific estimate/quote by its ID."""
+    if quickbooks is None:
+        raise RuntimeError("QuickBooks session not initialized.")
+
+    response = quickbooks.call_route("get", f"/estimate/{estimate_id}")
+    return response if isinstance(response, dict) else {"results": response}
+
+
+async def get_preferences() -> Dict[str, Any]:
+    """Retrieve the company's preferences and settings."""
+    if quickbooks is None:
+        raise RuntimeError("QuickBooks session not initialized.")
+
+    response = quickbooks.call_route("get", "/preferences")
+    return response if isinstance(response, dict) else {"results": response}
+
+
+async def get_reports_profit_and_loss(**kwargs) -> Dict[str, Any]:
+    """Generate a Profit and Loss report."""
+    if quickbooks is None:
+        raise RuntimeError("QuickBooks session not initialized.")
+
+    # Apply Previous->Last mapping for date_macro
+    params = {}
+    for key, value in kwargs.items():
+        if value is not None:
+            if key == "date_macro" and isinstance(value, str):
+                params[key] = convert_previous_to_last(value)
             else:
-                clean_api_route = original_route
+                params[key] = value
 
-            route = clean_api_route
-            api_method = api_info["method"]
-
-            path_params = {}
-            query_params = {}
-            request_body = {}
-
-            # Separate parameters based on their location ('in')
-            api_params = [
-                p for p in api_info.get("parameters", []) if p["name"] != "realmId"
-            ]
-            for p_info in api_params:
-                p_name = p_info["name"]
-                if p_name in kwargs and kwargs[p_name] is not None:
-                    if p_info["location"] == "path":
-                        path_params[p_name] = kwargs[p_name]
-                    elif p_info["location"] == "query":
-                        query_params[p_name] = kwargs[p_name]
-
-            # The rest of kwargs are assumed to be the request body for POST/PUT/PATCH
-            if api_method.lower() in ["post", "put", "patch"]:
-                body_keys = (
-                    set(kwargs.keys())
-                    - set(path_params.keys())
-                    - set(query_params.keys())
-                )
-                for k in body_keys:
-                    if kwargs[k] is not None:
-                        request_body[k] = kwargs[k]
-
-            # Format the route with path parameters
-            if path_params:
-                try:
-                    route = route.format(**path_params)
-                except KeyError as e:
-                    raise KeyError(
-                        f"Error: Missing required path parameter {e} for route {route}"
-                    )
-
-            response = quickbooks.call_route(
-                method_type=api_method,
-                route=route,
-                params=query_params,
-                body=request_body if request_body else None,
-            )
-
-            # Return the actual Python object
-            if isinstance(response, dict):
-                return response
-            elif isinstance(response, list):
-                return {"results": response}
-            else:
-                raise TypeError(
-                    f"Expected dict response but got {type(response).__name__}"
-                )
-        except Exception as e:
-            logger.error(f"Error executing API tool: {e}")
-            raise RuntimeError(f"Error executing API call: {e}")
-
-    return api_tool_function
+    response = quickbooks.call_route("get", "/reports/ProfitAndLoss", params=params)
+    return response if isinstance(response, dict) else {"results": response}
 
 
-# Dictionary to hold all tool functions - will be populated dynamically
+# Dictionary to hold all tool functions
 TOOL_FUNCTIONS: Dict[str, Any] = {
-    "get_quickbooks_entity_schema": get_quickbooks_entity_schema,
+    "get_entity_schema": get_quickbooks_entity_schema,
     "query_quickbooks": query_quickbooks,
+    "get_account": get_account,
+    "get_bill": get_bill,
+    "get_billpayment": get_billpayment,
+    "get_customer": get_customer,
+    "get_vendor": get_vendor,
+    "get_taxagency": get_taxagency,
+    "get_payment": get_payment,
+    "get_item": get_item,
+    "get_employee": get_employee,
+    "get_class": get_class,
+    "get_department": get_department,
+    "get_journalentry": get_journalentry,
+    "get_estimate": get_estimate,
+    "get_preferences": get_preferences,
+    "get_reports_profit_and_loss": get_reports_profit_and_loss,
 }
 
-
-def register_api_tools():
-    """Register all QuickBooks API tools dynamically."""
-    from .api_importer import load_apis
-
-    try:
-        apis = load_apis()
-        logger.info(f"Loading {len(apis)} QuickBooks API endpoints as tools")
-
-        for api in apis:
-            # Clean up the route and remove the company/realm part
-            original_route = api["route"]
-            if "/v3/company/{realmId}" in original_route:
-                clean_api_route = original_route.replace("/v3/company/{realmId}", "")
-            else:
-                clean_api_route = original_route
-
-            clean_route_for_name = (
-                clean_api_route.replace("/", "_")
-                .replace("-", "_")
-                .replace(":", "_")
-                .replace("{", "")
-                .replace("}", "")
-            )
-
-            tool_name = f"{api['method']}{clean_route_for_name}"
-
-            # Create the tool function
-            tool_function = create_api_tool_function(api)
-            TOOL_FUNCTIONS[tool_name] = tool_function
-
-        logger.info(f"Successfully registered {len(TOOL_FUNCTIONS)} tools")
-
-    except Exception as e:
-        logger.error(f"Error registering API tools: {e}")
-        raise
-
-
-# Register all API tools when module is imported
-register_api_tools()
+logger.info(f"Registered {len(TOOL_FUNCTIONS)} hardcoded tool functions")
