@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-quickbooks-mcp-server = "quickbooks_mcp_server.main:main"
+quickbooks-mcp-server = "quickbooks_mcp_server.server:main"
 
 [build-system]
 requires = ["hatchling"]
