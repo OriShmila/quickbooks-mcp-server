@@ -60,33 +60,34 @@ server = Server("QuickBooks")
 @server.list_tools()
 async def handle_list_tools() -> List[types.Tool]:
     """Handle list_tools request by returning all available tools with their schemas."""
-    tools: List[types.Tool] = []
+    try:
+        tools: List[types.Tool] = []
 
-    for tool_name, tool_schema in TOOL_SCHEMAS.items():
-        # Ensure the tool function exists
-        if tool_name not in TOOL_FUNCTIONS:
-            logger.warning(
-                f"Tool schema exists for {tool_name} but no handler function found"
+        for tool_name, tool_schema in TOOL_SCHEMAS.items():
+            # Ensure the tool function exists
+            if tool_name not in TOOL_FUNCTIONS:
+                logger.warning(
+                    f"Tool schema exists for {tool_name} but no handler function found"
+                )
+                continue
+
+            tools.append(
+                types.Tool(
+                    name=tool_name,
+                    description=tool_schema["description"],
+                    inputSchema=tool_schema["inputSchema"],
+                )
             )
-            continue
 
-        tools.append(
-            types.Tool(
-                name=tool_name,
-                description=tool_schema["description"],
-                inputSchema=tool_schema["inputSchema"],
-            )
-        )
-
-    logger.info(f"Listed {len(tools)} available tools")
-    return tools
+        return tools
+    except Exception as e:
+        raise e
 
 
 @server.call_tool()
 async def handle_call_tool(name: str, arguments: Dict[str, Any] | None) -> Any:
     """Handle call_tool request by executing the requested tool with provided arguments."""
-    logger.info(f"Calling tool: {name} with arguments: {arguments}")
-
+# todo validate env exisit here
     if name not in TOOL_FUNCTIONS:
         logger.error(f"Unknown tool requested: {name}")
         raise ValueError(f"Unknown tool: {name}")
@@ -97,10 +98,8 @@ async def handle_call_tool(name: str, arguments: Dict[str, Any] | None) -> Any:
     try:
         tool_function = TOOL_FUNCTIONS[name]
         result = await tool_function(**arguments)
-        logger.info(f"Tool {name} executed successfully")
         return result
     except Exception as e:
-        logger.error(f"Error calling tool {name}: {e}")
         raise ValueError(f"Tool execution error: {str(e)}")
 
 
@@ -115,6 +114,7 @@ async def run_server() -> None:
             InitializationOptions(
                 server_name="QuickBooks",
                 server_version="1.0.0",
+                capabilities=types.ServerCapabilities(tools=types.ToolsCapability()),
             ),
         )
 
@@ -128,8 +128,9 @@ def main():
         asyncio.run(run_server())
     except KeyboardInterrupt:
         logger.info("Server shutdown requested")
-    except Exception as e:
-        logger.error(f"Server error: {e}")
+    except Exception:
+        # Log full traceback to diagnose TaskGroup/async errors
+        logger.exception("Server error")
         sys.exit(1)
 
 

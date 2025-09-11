@@ -1,8 +1,14 @@
 import requests
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
+# Load environment variables from .env if python-dotenv is available
+try:
+    from dotenv import load_dotenv  # type: ignore
+
+    load_dotenv()
+except Exception:
+    # Safe to proceed without dotenv; env variables may be provided by the host
+    pass
 
 
 class QuickBooksSession:
