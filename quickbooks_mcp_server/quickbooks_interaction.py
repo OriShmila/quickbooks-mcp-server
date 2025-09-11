@@ -1,5 +1,4 @@
 import requests
-from requests.auth import HTTPBasicAuth
 import os
 from dotenv import load_dotenv
 
@@ -8,53 +7,46 @@ load_dotenv()
 
 class QuickBooksSession:
     def __init__(self):
-        # Get credentials from environment variables
-        self.client_id = os.getenv("QUICKBOOKS_CLIENT_ID")
-        self.client_secret = os.getenv("QUICKBOOKS_CLIENT_SECRET")
-        self.refresh_token = os.getenv("QUICKBOOKS_REFRESH_TOKEN")
-        self.company_id = os.getenv("QUICKBOOKS_COMPANY_ID")
+        """Initialize session using static env vars only (no refresh management).
+
+        Required env vars:
+        - QBO_ACCESS_TOKEN: OAuth access token (Bearer)
+        - QBO_REALM_ID: QuickBooks realm/company id
+        - QBO_ENV: 'sandbox' or 'production' (defaults to 'sandbox')
+        """
+        # Read required configuration
+        self.access_token = os.getenv("QBO_ACCESS_TOKEN")
+        self.company_id = os.getenv("QBO_REALM_ID")
+
+        if not self.access_token:
+            raise RuntimeError("QBO_ACCESS_TOKEN environment variable is required")
+        if not self.company_id:
+            raise RuntimeError("QBO_REALM_ID environment variable is required")
+
         # Set base URL based on environment
-        env = os.getenv("QUICKBOOKS_ENV", "sandbox").lower()
+        env_raw = os.getenv("QBO_ENV", "sandbox").lower()
+        # Normalize a few common aliases
+        env = {
+            "prod": "production",
+            "production": "production",
+            "live": "production",
+            "sandbox": "sandbox",
+            "sbx": "sandbox",
+        }.get(env_raw, env_raw)
+
         base_urls = {
             "production": "https://quickbooks.api.intuit.com",
             "sandbox": "https://sandbox-quickbooks.api.intuit.com",
         }
         self.base_url = base_urls.get(env, base_urls["sandbox"])
 
-        self.token_url = "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer"
-        self.access_token = None
-        self.refresh_access_token()
-
     def _get_headers(self):
-        if self.access_token is None:
-            return None
-        else:
-            return {
-                "Authorization": f"Bearer {self.access_token}",
-                "Accept": "application/json",
-            }
-
-    def refresh_access_token(self):
-        """Refresh the access token using the refresh token."""
-        headers = {
+        return {
+            "Authorization": f"Bearer {self.access_token}",
             "Accept": "application/json",
-            "Content-Type": "application/x-www-form-urlencoded",
         }
-        data = {"grant_type": "refresh_token", "refresh_token": self.refresh_token}
-        response = requests.post(
-            self.token_url,
-            headers=headers,
-            data=data,
-            auth=HTTPBasicAuth(self.client_id, self.client_secret),
-        )
 
-        if response.status_code == 200:
-            tokens = response.json()
-            self.access_token = tokens["access_token"]
-            self.refresh_token = tokens.get("refresh_token", self.refresh_token)
-        else:
-            message = f"Error refreshing token: {response.status_code} {response.text}"
-            raise RuntimeError(message)
+    # No refresh token management — errors should be raised to the caller
 
     def call_route(self, method_type, route, params: dict = None, body: dict = None):
         method = getattr(requests, method_type)
@@ -72,25 +64,9 @@ class QuickBooksSession:
 
         if response.status_code == 200:
             return response.json()
-        elif response.status_code == 401:
-            # Access token expired; refresh and retry once
-            self.refresh_access_token()
-
-            if method_type == "get":
-                response = method(url, params=params, headers=self._get_headers())
-            else:
-                response = method(
-                    url, json=body, params=params, headers=self._get_headers()
-                )
-
-            if response.status_code == 200:
-                return response.json()
-            else:
-                message = f"Error: {response.status_code} {response.text}"
-                raise RuntimeError(message)
-        else:
-            message = f"Error: {response.status_code} {response.text}"
-            raise RuntimeError(message)
+        # No retries or refresh handling — surface the error immediately
+        message = f"Error: {response.status_code} {response.text}"
+        raise RuntimeError(message)
 
     def query(
         self,

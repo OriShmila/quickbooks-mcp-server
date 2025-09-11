@@ -25,11 +25,9 @@ cp env_template.txt .env
 
 Then edit the `.env` file with your actual QuickBooks API credentials:
 ```
-QUICKBOOKS_CLIENT_ID=your_actual_client_id
-QUICKBOOKS_CLIENT_SECRET=your_actual_client_secret
-QUICKBOOKS_REFRESH_TOKEN=your_actual_refresh_token
-QUICKBOOKS_COMPANY_ID=your_actual_company_id
-QUICKBOOKS_ENV='sandbox' or 'production'
+QBO_ACCESS_TOKEN=your_actual_access_token
+QBO_REALM_ID=your_actual_realm_id
+QBO_ENV='sandbox' or 'production'
 ```
 
 **Note:** The `.env` file is automatically ignored by git for security reasons.

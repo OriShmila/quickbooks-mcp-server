@@ -9,7 +9,7 @@ import os
 import logging
 from typing import Dict, List, Any
 
-from mcp.server import NotificationOptions, Server
+from mcp.server import Server
 from mcp.server.models import InitializationOptions
 import mcp.server.stdio
 import mcp.types as types
@@ -115,10 +115,6 @@ async def run_server() -> None:
             InitializationOptions(
                 server_name="QuickBooks",
                 server_version="1.0.0",
-                capabilities=server.get_capabilities(
-                    notification_options=NotificationOptions(),
-                    experimental_capabilities={},
-                ),
             ),
         )
 
