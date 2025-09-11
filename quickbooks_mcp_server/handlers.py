@@ -37,13 +37,17 @@ def check_for_api_error(response: Dict[str, Any]) -> None:
         raise RuntimeError(error_msg)
 
 
-# Initialize QuickBooks session with error handling
-quickbooks = None
-try:
-    quickbooks = QuickBooksSession()
-    logger.info("QuickBooks session initialized successfully")
-except Exception as e:
-    logger.warning(f"QuickBooks session initialization deferred: {e}")
+# Lazy QuickBooks session initialization to avoid requiring env for list_tools
+quickbooks: Optional[QuickBooksSession] = None
+
+
+def get_quickbooks_session() -> QuickBooksSession:
+    """Get or initialize the QuickBooks session when a tool actually needs it."""
+    global quickbooks
+    if quickbooks is None:
+        quickbooks = QuickBooksSession()
+        logger.info("QuickBooks session initialized successfully")
+    return quickbooks
 
 
 async def get_quickbooks_entity_schema(entity_name: str) -> Dict[str, Any]:
@@ -88,10 +92,12 @@ async def query_quickbooks(
     Executes a read-only SQL-like query on a QuickBooks entity and returns a normalized shape:
     { result: [...], next_page_token?: string }
     """
-    if quickbooks is None:
+    try:
+        session = get_quickbooks_session()
+    except Exception as e:
         raise RuntimeError(
-            "QuickBooks session not initialized. Please check your credentials and restart the server."
-        )
+            "QuickBooks session not initialized. Please set QBO_ACCESS_TOKEN, QBO_REALM_ID, and QBO_ENV."
+        ) from e
 
     start_position: Optional[int] = None
     if page_token:
@@ -102,7 +108,7 @@ async def query_quickbooks(
                 "Invalid page_token; expected integer string for start position"
             )
 
-    response = quickbooks.query(
+    response = session.query(
         query, start_position=start_position, max_results=page_size
     )
     check_for_api_error(response)
@@ -277,8 +283,12 @@ async def get_report(
     page_token: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Run a QuickBooks report and return normalized long-format rows with meta."""
-    if quickbooks is None:
-        raise RuntimeError("QuickBooks session not initialized.")
+    try:
+        session = get_quickbooks_session()
+    except Exception as e:
+        raise RuntimeError(
+            "QuickBooks session not initialized. Please set QBO_ACCESS_TOKEN, QBO_REALM_ID, and QBO_ENV."
+        ) from e
 
     params: Dict[str, Any] = {}
 
@@ -305,7 +315,7 @@ async def get_report(
                 "Invalid page_token; expected integer string for start position"
             )
 
-    response = quickbooks.call_route("get", f"/reports/{report_name}", params=params)
+    response = session.call_route("get", f"/reports/{report_name}", params=params)
     check_for_api_error(response)
 
     if not isinstance(response, dict):
@@ -317,7 +327,7 @@ async def get_report(
         report_name=report_name,
         date_macro=date_macro,
         group_by=group_by,
-        qb_realm_id=getattr(quickbooks, "company_id", None),
+        qb_realm_id=getattr(session, "company_id", None),
     )
 
     result: Dict[str, Any] = {"result": normalized_rows, "meta": meta}
